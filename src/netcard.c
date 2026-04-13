@@ -343,40 +343,19 @@ void netcard_init(void)
     cb_scan = NULL;
     got_ready = false;
 
-    printf("[NETCARD] Waiting for ESP-01 +READY...\n");
-
-    /* Wait for +READY from ESP-01 after power-on / reset (5 second timeout) */
-    absolute_time_t deadline = make_timeout_time_ms(5000);
-
-    while (!got_ready && get_absolute_time() < deadline)
-        run_tasks(false);
-
-    if (!got_ready)
-        printf("[NETCARD] No +READY received (missed or ESP-01 not connected)\n");
-    else
-        printf("[NETCARD] Got +READY\n");
-
-    printf("[NETCARD] Verifying modem...\n");
-
-    /* Give the modem a moment to settle after +READY */
+    /* Drain any stale data, then verify modem with AT */
     absolute_time_t settle = make_timeout_time_ms(500);
     while (get_absolute_time() < settle)
-        run_tasks(false);
+        netcard_poll();
 
-    /* Send AT and verify OK — retry a few times in case of startup junk */
     for (int attempt = 0; attempt < 5; attempt++) {
-        if (nc_send_and_wait("AT", NC_TIMEOUT_DEFAULT)) {
-            printf("[NETCARD] Modem ready\n");
+        if (nc_send_and_wait("AT", NC_TIMEOUT_DEFAULT))
             return;
-        }
 
-        /* Small delay before retry */
         absolute_time_t retry_delay = make_timeout_time_ms(200);
         while (get_absolute_time() < retry_delay)
-            run_tasks(false);
+            netcard_poll();
     }
-
-    printf("[NETCARD] Modem did not respond to AT\n");
 }
 
 /* -------------------------------------------------------------------------- */

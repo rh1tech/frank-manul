@@ -924,6 +924,11 @@ static void handle_tag_close(render_ctx_t *ctx, const html_token_t *tok) {
         }
         ctx->in_anchor = false;
         ctx->current_link_id = -1;
+        /* Mark that a space is needed before the next inline content
+         * so adjacent links don't run together */
+        ctx->last_was_space = false;
+        if (ctx->col > 0 && !ctx->at_line_start)
+            emit_char(ctx, ' ');
         return;
     }
 

@@ -318,6 +318,11 @@ void browser_go_back(void)
 /* ------------------------------------------------------------------ */
 void browser_navigate(const char *url)
 {
+    if (!bs.wifi_connected) {
+        browser_set_status("No WiFi - press F2 to configure");
+        return;
+    }
+
     /* Push current page to history */
     history_push();
 
@@ -856,22 +861,21 @@ void browser_init(void)
     /* Register WiFi status callback */
     netcard_set_wifi_callback(wifi_status_callback);
 
+    /* Show the welcome page first */
+    show_welcome_page();
+
     /* Auto-connect WiFi if credentials are saved */
     if (browser_config_has_wifi()) {
         const browser_config_t *cfg = browser_config_get();
         browser_set_status("Connecting to WiFi...");
         draw_status_bar();
-        netcard_wifi_join(cfg->wifi_ssid, cfg->wifi_pass);
+        if (netcard_wifi_join(cfg->wifi_ssid, cfg->wifi_pass)) {
+            bs.wifi_connected = true;
+            browser_set_status("WiFi connected");
+        } else {
+            browser_set_status("WiFi failed - press F2 to configure");
+        }
     } else {
         browser_set_status("Press F2 to configure WiFi");
-    }
-
-    /* Show the welcome page */
-    show_welcome_page();
-
-    /* If a homepage is configured and WiFi is available, navigate to it */
-    const browser_config_t *cfg = browser_config_get();
-    if (cfg->homepage[0] != '\0' && browser_config_has_wifi()) {
-        browser_navigate(cfg->homepage);
     }
 }
