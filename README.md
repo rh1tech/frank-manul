@@ -2,34 +2,32 @@
 
 Text web browser for Raspberry Pi Pico 2 (RP2350) with HDMI output, PS/2 keyboard, and WiFi via ESP-01 module.
 
-## Features
+Renders HTML pages to an 80x30 character grid over HDMI. Connects to the internet through an ESP-01 running the [frank-netcard](https://github.com/rh1tech/frank-netcard) AT modem firmware.
 
-- HTTP and HTTPS browsing
-- Streaming HTML parser with text rendering
-- Keyboard-driven navigation
-- WiFi configuration UI
-- UTF-8 Cyrillic support (Win-1251 font)
-- Link highlighting, scrolling, history
-- Redirect following (301/302/307/308)
-- IRQ-buffered PIO UART for reliable ESP-01 communication
+## What it does
 
-## Supported Board
+- Browses HTTP and HTTPS sites
+- Parses HTML as it arrives (no full-page buffering)
+- Follows redirects (301/302/307/308)
+- Displays Cyrillic text (Win-1251 font with UTF-8 decoding)
+- Stores WiFi credentials in flash
 
-This firmware is designed for the **M2** GPIO layout on RP2350-based boards with integrated HDMI, PS/2 keyboard, I2S audio, and ESP-01 WiFi:
+## Supported board
 
-- **[FRANK](https://rh1.tech/projects/frank?area=about)** -- A versatile development board based on RP Pico 2, HDMI output, and extensive I/O options.
+Uses the M2 GPIO layout. Tested on the [FRANK](https://rh1.tech/projects/frank?area=about) board (RP2350-based, HDMI, PS/2, I2S audio).
 
-## Hardware Requirements
+## Hardware
 
-- **Raspberry Pi Pico 2** (RP2350) or compatible board with M2 GPIO layout
-- **HDMI connector** (directly connected via resistors, no encoder needed)
-- **PS/2 keyboard**
-- **ESP-01 WiFi module** running [frank-netcard](https://github.com/rh1tech/frank-netcard) AT command firmware
-- **I2S DAC module** (optional, for audio feedback)
+- RP2350 board with M2 GPIO layout
+- HDMI connector (directly connected via resistors)
+- PS/2 keyboard
+- ESP-01 WiFi module running [frank-netcard](https://github.com/rh1tech/frank-netcard)
+- I2S DAC (optional, for beeps)
 
-### Wiring (M2 Layout)
+### Wiring (M2 layout)
 
-#### HDMI (via 270 ohm resistors)
+HDMI (via 270 ohm resistors):
+
 | Signal | GPIO |
 |--------|------|
 | CLK-   | 12   |
@@ -41,30 +39,10 @@ This firmware is designed for the **M2** GPIO layout on RP2350-based boards with
 | D2-    | 18   |
 | D2+    | 19   |
 
-#### PS/2 Keyboard
-| Signal | GPIO |
-|--------|------|
-| CLK    | 2    |
-| DATA   | 3    |
-
-#### PS/2 Mouse
-| Signal | GPIO |
-|--------|------|
-| CLK    | 0    |
-| DATA   | 1    |
-
-#### ESP-01 WiFi (PIO UART)
-| Signal     | GPIO |
-|------------|------|
-| TX (to ESP RX)  | 21   |
-| RX (from ESP TX) | 20   |
-
-#### I2S Audio
-| Signal | GPIO |
-|--------|------|
-| DATA   | 9    |
-| BCLK   | 10   |
-| LRCLK  | 11   |
+PS/2 Keyboard: CLK=2, DATA=3
+PS/2 Mouse: CLK=0, DATA=1
+ESP-01: TX=21 (to ESP RX), RX=20 (from ESP TX)
+I2S Audio: DATA=9, BCLK=10, LRCLK=11
 
 ## Controls
 
@@ -73,78 +51,50 @@ This firmware is designed for the **M2** GPIO layout on RP2350-based boards with
 | Up / Down | Scroll one line |
 | PgUp / PgDn | Scroll one page |
 | Home / End | Top / bottom of page |
-| Tab | Select next link |
-| Shift+Tab | Select previous link |
-| Enter | Follow selected link |
-| Backspace | Go back in history |
+| Tab | Next link |
+| Shift+Tab | Previous link |
+| Enter | Follow link |
+| Backspace | Back |
 | Ctrl+L | Enter URL |
-| Escape | Cancel loading / exit URL input |
+| Escape | Cancel / exit URL input |
 | F1 | Help |
 | F2 | WiFi setup |
-| F5 | Reload page |
+| F5 | Reload |
 
 ## Building
 
-### Prerequisites
-
-1. Install the [Raspberry Pi Pico SDK](https://github.com/raspberrypi/pico-sdk) (version 2.2+)
-2. Set environment variable: `export PICO_SDK_PATH=/path/to/pico-sdk`
-3. Install ARM GCC toolchain
-
-### Build Steps
+You need the [Pico SDK](https://github.com/raspberrypi/pico-sdk) (2.2+) and ARM GCC.
 
 ```bash
 git clone https://github.com/rh1tech/frank-manul.git
 cd frank-manul
 
-# DispHSTX display library (required)
+# Display library (required, not included)
 git clone https://github.com/Panda381/DispHSTX.git lib/DispHSTX
 
 ./build.sh
 ```
 
-Or manually:
-
-```bash
-mkdir build && cd build
-cmake ..
-make -j$(nproc)
-```
-
 ### Flashing
 
 ```bash
-# With device in BOOTSEL mode:
+# BOOTSEL mode:
 picotool load build/frank_manul.uf2
 
 # Or with device running:
 ./flash.sh
 ```
 
-### Release Builds
+## ESP-01 setup
 
-```bash
-./release.sh
-```
-
-Creates a versioned UF2 file in the `release/` directory.
-
-## ESP-01 Setup
-
-The ESP-01 module must be running the [frank-netcard](https://github.com/rh1tech/frank-netcard) AT command firmware. This firmware provides:
-
-- WiFi scanning and connection
-- TCP and TLS socket support
-- DNS resolution
-
-See the frank-netcard repository for flashing instructions.
+The ESP-01 must run the [frank-netcard](https://github.com/rh1tech/frank-netcard) firmware, which turns it into an AT command modem (WiFi, TCP, TLS, DNS). See that repo for flashing instructions.
 
 ## License
 
-GNU General Public License v3. See [LICENSE](LICENSE) for details.
+GPL-3.0. See [LICENSE](LICENSE).
 
-Hardware drivers based on [iris-2350](https://github.com/rh1tech/iris-2350) (GPL-3.0).
-Display library: [DispHSTX](https://github.com/Panda381/DispHSTX) by Miroslav Nemecek (permissive license).
+Hardware drivers from [iris-2350](https://github.com/rh1tech/iris-2350) (GPL-3.0).
+Display library: [DispHSTX](https://github.com/Panda381/DispHSTX) by Miroslav Nemecek (permissive).
 
 ## Author
 
