@@ -1,5 +1,7 @@
 # Manul
 
+Official page: **[frank.rh1.tech](https://frank.rh1.tech/)** — hub for all FRANK boards and firmware.
+
 Text web browser for Raspberry Pi Pico 2 (RP2350) with HDMI output, PS/2 keyboard, and WiFi via ESP-01 module.
 
 Renders HTML pages to an 80x30 character grid over HDMI. Connects to the internet through an ESP-01 running the [frank-netcard](https://github.com/rh1tech/frank-netcard) AT modem firmware.
